@@ -1,0 +1,4 @@
+.env
+**/.env
+ADMIN_CREDENTIALS.txt
+node_modules/
