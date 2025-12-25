@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { connectDB } from "./lib/db.js";
 
 // Routes
@@ -14,26 +15,37 @@ import invoiceRoutes from "./routes/invoices.js";
 import roomBookingRoutes from "./routes/roomBooking.js";
 import registrationRoutes from "./routes/registration.js";
 import announcementRoutes from "./routes/announcements.js";
-import cookieParser from "cookie-parser";
 
 const app = express();
 
-// ------------------ MIDDLEWARE ------------------ //
+/* -------------------- CORS (CRITICAL) -------------------- */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://hostel-management_system-jet.vercel.app",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173", 
-      process.env.CLIENT_URL // Production frontend URL
-    ],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS NOT ALLOWED"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-app.use(cookieParser());
+// ✅ REQUIRED for preflight
+app.options("*", cors());
 
+app.use(cookieParser());
 app.use(express.json({ limit: "4mb" }));
 
-// ------------------ ROUTES ------------------ //
+/* -------------------- ROUTES -------------------- */
 app.use("/api/auth", authRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/admin", adminRoutes);
@@ -45,7 +57,7 @@ app.use("/api/room-booking", roomBookingRoutes);
 app.use("/api/registration", registrationRoutes);
 app.use("/api/announcements", announcementRoutes);
 
-// ------------------ START SERVER ------------------ //
+/* -------------------- START SERVER -------------------- */
 const PORT = process.env.PORT || 5000;
 
 await connectDB();
